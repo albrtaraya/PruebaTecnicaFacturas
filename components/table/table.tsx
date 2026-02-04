@@ -291,13 +291,20 @@ export function Table() {
             </div>
             </div>
         )}
-        {searchBarMovingUp && invoices.length === 0  &&
-                <div style={{display: "flex"}} className={`pointer-events-none flex items-center justify-center min-h-screen delay-700 transition-all overflow-hidden ease-out duration-500 ${searchBarMovingUp && invoices.length === 0  ? "opacity-100 " : "opacity-0 "}`}>
+        {selectedCustomers.length === 0 && (
+                <div className="flex items-center justify-center py-20">
+                    <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <p className="text-muted-foreground text-lg">Seleccione un cliente para ver las facturas</p>
+                    </div>
+                </div>
+        )}
+        {selectedCustomers.length > 0 && invoices.length === 0 && (
+                <div className="flex items-center justify-center py-20">
                     <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <p className="text-muted-foreground text-lg">No se encontraron facturas</p>
                     </div>
                 </div>
-        }
+        )}
 
         <FiltersPanel
             isOpen={isFiltersOpen}
