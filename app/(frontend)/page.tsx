@@ -35,7 +35,9 @@ export default function Home() {
             </h1>
             <p className="text-md text-gray-500 dark:text-gray-300">
               Esta es la prueba técnica, ingresa el identificador del cliente para
-              ver sus facturas (ejemplo: 123)
+              ver sus facturas (ejemplo: 123, 456, 789, 1011, 1213, 1415, 1617 o 1819).<br/>
+              Luego haga clic sobre una card o el boton de billetera para pagar la factura. <br/>
+              Use los filtros para ver las facturas que puedan interesarle. 
             </p>
           </div>
           <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col max-md:mt-8">
