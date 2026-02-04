@@ -31,6 +31,12 @@ export function Table() {
     const [isFiltersOpen, setIsFiltersOpen] = useState(false)
     const [rowsPerPage, setRowsPerPage] = useState(6)
     const [viewMode, setViewMode] = useState<"cards" | "table">("cards")
+    const [showToolbar, setShowToolbar] = useState(false)
+
+    useEffect(() => {
+      const timer = setTimeout(() => setShowToolbar(true), 100)
+      return () => clearTimeout(timer)
+    }, [])
 
   const [filters, setFilters] = useState({
     status: "all",
@@ -236,16 +242,11 @@ export function Table() {
           </div>
         )}
 
-        {selectedCustomers.length > 0 && (
-            <div className="pt-4 pb-8 max-md:mt-0">
+        <div className="pt-4 pb-8 max-md:mt-0">
             <div className="container mx-auto max-w-8xl px-6 max-lg:pt-4">
                 <div
-                className={`flex items-center justify-between mb-6 ${
-                    isFirstSearch
-                    ? `transition-all duration-500 ease-out ${
-                        showResults ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-                        }`
-                    : ""
+                className={`flex items-center justify-between mb-6 transition-all duration-500 ease-out ${
+                    showToolbar ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
                 }`}
                 >
                 <Button variant="outline" size="lg" onClick={() => setIsFiltersOpen(true)} className="gap-2">
@@ -364,23 +365,21 @@ export function Table() {
                 </div>
                 </div>
                 </>
-                ) : (
+                ) : selectedCustomers.length > 0 ? (
                 <div className="flex items-center justify-center py-20">
                     <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <p className="text-muted-foreground text-lg">No se encontraron facturas</p>
                     </div>
                 </div>
-                )}
-            </div>
-            </div>
-        )}
-        {selectedCustomers.length === 0 && (
-                <div className="flex items-center justify-center py-20">
-                    <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+                ) : (
+                <div className={`flex items-center justify-center py-20 transition-all duration-500 ease-out delay-200 ${showToolbar ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
+                    <div className="text-center">
                     <p className="text-muted-foreground text-lg">Seleccione un cliente para ver las facturas</p>
                     </div>
                 </div>
-        )}
+                )}
+            </div>
+        </div>
 
         <FiltersPanel
             isOpen={isFiltersOpen}
