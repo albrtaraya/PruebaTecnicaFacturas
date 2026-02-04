@@ -56,7 +56,6 @@ export const ModalPayment = ({children, invoice}: ModalPaymentProps) => {
                 )
                 const allInvoices = results.flatMap((res: any) => res.data.dataset || [])
                 setMockInvoices(allInvoices)
-                setInvoices(allInvoices)
                 setError(null)
             } catch (err: any) {
                 setError(err.response?.data?.error || 'Error al cargar facturas')

@@ -61,47 +61,52 @@ export function Table() {
   }
 
   useEffect(() => {
-    if (filtersRestoredFromUrl.current || mockInvoices.length === 0) return
-    filtersRestoredFromUrl.current = true
+    if (mockInvoices.length === 0) return
 
-    const params = new URLSearchParams(window.location.search)
-    const status = params.get('status')
-    const minAmount = params.get('minAmount')
-    const maxAmount = params.get('maxAmount')
-    const startDate = params.get('startDate')
-    const endDate = params.get('endDate')
+    let activeFilters = filters
 
-    if (!status && !minAmount && !maxAmount && !startDate && !endDate) return
+    // On first load, restore filters from URL if present
+    if (!filtersRestoredFromUrl.current) {
+      filtersRestoredFromUrl.current = true
 
-    const restoredFilters = {
-      status: status || "all",
-      minAmount: minAmount || "",
-      maxAmount: maxAmount || "",
-      startDate: startDate || "",
-      endDate: endDate || "",
+      const params = new URLSearchParams(window.location.search)
+      const status = params.get('status')
+      const minAmount = params.get('minAmount')
+      const maxAmount = params.get('maxAmount')
+      const startDate = params.get('startDate')
+      const endDate = params.get('endDate')
+
+      if (status || minAmount || maxAmount || startDate || endDate) {
+        activeFilters = {
+          status: status || "all",
+          minAmount: minAmount || "",
+          maxAmount: maxAmount || "",
+          startDate: startDate || "",
+          endDate: endDate || "",
+        }
+        setFilters(activeFilters)
+      }
     }
-    setFilters(restoredFilters)
 
     let filtered = [...mockInvoices]
 
-    if (restoredFilters.status !== "all") {
-      filtered = filtered.filter((inv) => inv.status === restoredFilters.status)
+    if (activeFilters.status !== "all") {
+      filtered = filtered.filter((inv) => inv.status === activeFilters.status)
     }
-    if (restoredFilters.minAmount) {
-      filtered = filtered.filter((inv) => inv.amount >= Number.parseFloat(restoredFilters.minAmount))
+    if (activeFilters.minAmount) {
+      filtered = filtered.filter((inv) => inv.amount >= Number.parseFloat(activeFilters.minAmount))
     }
-    if (restoredFilters.maxAmount) {
-      filtered = filtered.filter((inv) => inv.amount <= Number.parseFloat(restoredFilters.maxAmount))
+    if (activeFilters.maxAmount) {
+      filtered = filtered.filter((inv) => inv.amount <= Number.parseFloat(activeFilters.maxAmount))
     }
-    if (restoredFilters.startDate) {
-      filtered = filtered.filter((inv) => inv.dueDate >= restoredFilters.startDate)
+    if (activeFilters.startDate) {
+      filtered = filtered.filter((inv) => inv.dueDate >= activeFilters.startDate)
     }
-    if (restoredFilters.endDate) {
-      filtered = filtered.filter((inv) => inv.dueDate <= restoredFilters.endDate)
+    if (activeFilters.endDate) {
+      filtered = filtered.filter((inv) => inv.dueDate <= activeFilters.endDate)
     }
 
     setInvoices(filtered)
-    setCurrentPage(1)
   }, [mockInvoices])
 
     useEffect(() => {
