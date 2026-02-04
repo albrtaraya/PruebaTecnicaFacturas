@@ -1,5 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { mockInvoices } from "../../mocks/MockInvoices";
+import { MockCustomers } from "../../mocks/MockCustomers";
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,7 +13,13 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const dataset = mockInvoices.filter((inv) => inv.customerId === customerId);
+    const customer = MockCustomers.find((c) => c.customerId === customerId);
+    const dataset = mockInvoices
+      .filter((inv) => inv.customerId === customerId)
+      .map((inv) => ({
+        ...inv,
+        customerName: customer?.name ?? "Desconocido",
+      }));
 
     return NextResponse.json({ dataset });
   } catch (error) {
