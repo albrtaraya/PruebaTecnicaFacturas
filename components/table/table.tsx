@@ -138,29 +138,34 @@ export function Table() {
   }
 
     return <>
-        {invoices.length > 0 && (
-            <div className="pt-12 pb-8 max-md:mt-0">
-            <div className="container mx-auto max-w-8xl px-6 max-lg:pt-4">
-                {/* Badges de clientes seleccionados */}
-                {selectedCustomers.length > 0 && (
-                  <div className="flex items-center gap-2 mb-4 flex-wrap">
-                    <span className="text-sm text-muted-foreground">Clientes:</span>
-                    {selectedCustomers.map((customer) => (
-                      <Badge
-                        key={customer.customerId}
-                        variant="secondary"
-                        className="flex items-center gap-1 px-3 py-1 text-sm"
-                      >
-                        {customer.name}
-                        <X
-                          className="h-3 w-3 cursor-pointer hover:text-destructive"
-                          onClick={() => removeCustomer(customer.customerId)}
-                        />
-                      </Badge>
-                    ))}
-                  </div>
-                )}
+        {/* Badges de clientes seleccionados */}
+        {selectedCustomers.length > 0 && (
+          <div className="container mx-auto max-w-8xl px-6 pt-4">
+            <div className="flex items-center gap-2 mb-4 flex-wrap">
+              <span className="text-sm text-muted-foreground">Clientes:</span>
+              {selectedCustomers.map((customer) => (
+                <Badge
+                  key={customer.customerId}
+                  variant="secondary"
+                  className="flex items-center gap-1 px-3 py-1 text-sm"
+                >
+                  {customer.name}
+                  <button
+                    type="button"
+                    className="inline-flex cursor-pointer hover:text-destructive"
+                    onClick={() => removeCustomer(customer.customerId)}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
 
+        {invoices.length > 0 && (
+            <div className="pt-4 pb-8 max-md:mt-0">
+            <div className="container mx-auto max-w-8xl px-6 max-lg:pt-4">
                 <div
                 className={`flex items-center justify-between mb-6 ${
                     isFirstSearch
