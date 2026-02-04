@@ -195,6 +195,64 @@ export function Table() {
     }, 400)
   }
 
+  const statusLabels: Record<string, string> = {
+    paid: "Pagado",
+    pending: "Pendiente",
+    overdue: "Vencido",
+  }
+
+  const filterLabels: Record<string, string> = {
+    status: "Estado",
+    minAmount: "Monto min",
+    maxAmount: "Monto max",
+    startDate: "Desde",
+    endDate: "Hasta",
+  }
+
+  const getFilterDisplayValue = (key: string, value: string) => {
+    if (key === "status") return statusLabels[value] || value
+    if (key === "minAmount" || key === "maxAmount") return `Bs. ${value}`
+    return value
+  }
+
+  const activeFilterEntries = Object.entries(filters).filter(
+    ([key, value]) => value !== "" && value !== "all"
+  )
+
+  const removeFilter = (key: string) => {
+    const newFilters = { ...filters, [key]: key === "status" ? "all" : "" }
+    setFilters(newFilters)
+
+    let filtered = [...mockInvoices]
+
+    if (newFilters.status !== "all") {
+      filtered = filtered.filter((inv) => inv.status === newFilters.status)
+    }
+    if (newFilters.minAmount) {
+      filtered = filtered.filter((inv) => inv.amount >= Number.parseFloat(newFilters.minAmount))
+    }
+    if (newFilters.maxAmount) {
+      filtered = filtered.filter((inv) => inv.amount <= Number.parseFloat(newFilters.maxAmount))
+    }
+    if (newFilters.startDate) {
+      filtered = filtered.filter((inv) => inv.dueDate >= newFilters.startDate)
+    }
+    if (newFilters.endDate) {
+      filtered = filtered.filter((inv) => inv.dueDate <= newFilters.endDate)
+    }
+
+    setInvoices(filtered)
+    setCurrentPage(1)
+
+    updateUrlParams({
+      status: newFilters.status !== "all" ? newFilters.status : null,
+      minAmount: newFilters.minAmount || null,
+      maxAmount: newFilters.maxAmount || null,
+      startDate: newFilters.startDate || null,
+      endDate: newFilters.endDate || null,
+    })
+  }
+
   const clearFilters = () => {
     setShowResults(false)
 
@@ -254,10 +312,28 @@ export function Table() {
                     showToolbar ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
                 }`}
                 >
+                <div className="flex items-center gap-2 flex-wrap">
                 <Button variant="outline" size="lg" onClick={() => setIsFiltersOpen(true)} className="gap-2">
                     <Filter className="h-4 w-4" />
                     Filtros
                 </Button>
+                {activeFilterEntries.map(([key, value]) => (
+                    <Badge
+                      key={key}
+                      variant="secondary"
+                      className="flex items-center gap-1 px-3 py-1 text-sm"
+                    >
+                      {filterLabels[key]}: {getFilterDisplayValue(key, value)}
+                      <button
+                        type="button"
+                        className="inline-flex cursor-pointer hover:text-destructive"
+                        onClick={() => removeFilter(key)}
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                ))}
+                </div>
 
                 <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1 border rounded-lg p-1">
