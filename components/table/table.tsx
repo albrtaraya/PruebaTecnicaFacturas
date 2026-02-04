@@ -236,7 +236,7 @@ export function Table() {
           </div>
         )}
 
-        {invoices.length > 0 && (
+        {selectedCustomers.length > 0 && (
             <div className="pt-4 pb-8 max-md:mt-0">
             <div className="container mx-auto max-w-8xl px-6 max-lg:pt-4">
                 <div
@@ -282,6 +282,8 @@ export function Table() {
                 </div>
                 </div>
 
+                {invoices.length > 0 ? (
+                <>
                 <div
                 className={`transition-all duration-500 ease-out ${
                     showResults ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"
@@ -361,6 +363,14 @@ export function Table() {
                     </Button>
                 </div>
                 </div>
+                </>
+                ) : (
+                <div className="flex items-center justify-center py-20">
+                    <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+                    <p className="text-muted-foreground text-lg">No se encontraron facturas</p>
+                    </div>
+                </div>
+                )}
             </div>
             </div>
         )}
@@ -368,13 +378,6 @@ export function Table() {
                 <div className="flex items-center justify-center py-20">
                     <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
                     <p className="text-muted-foreground text-lg">Seleccione un cliente para ver las facturas</p>
-                    </div>
-                </div>
-        )}
-        {selectedCustomers.length > 0 && invoices.length === 0 && (
-                <div className="flex items-center justify-center py-20">
-                    <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <p className="text-muted-foreground text-lg">No se encontraron facturas</p>
                     </div>
                 </div>
         )}
