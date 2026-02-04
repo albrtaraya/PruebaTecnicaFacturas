@@ -9,6 +9,7 @@ import { FiltersPanel } from "@/components/ui/filters-panel"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { useInvoice } from "@/contexts/InvoiceContext"
+import { filterInvoices, getFilterDisplayValue, getActiveFilterEntries, parseUrlFilters, buildUrlParams, FILTER_LABELS } from "@/lib/invoice-utils"
 
 export function Table() {
     const {
@@ -68,45 +69,14 @@ export function Table() {
     // On first load, restore filters from URL if present
     if (!filtersRestoredFromUrl.current) {
       filtersRestoredFromUrl.current = true
-
-      const params = new URLSearchParams(window.location.search)
-      const status = params.get('status')
-      const minAmount = params.get('minAmount')
-      const maxAmount = params.get('maxAmount')
-      const startDate = params.get('startDate')
-      const endDate = params.get('endDate')
-
-      if (status || minAmount || maxAmount || startDate || endDate) {
-        activeFilters = {
-          status: status || "all",
-          minAmount: minAmount || "",
-          maxAmount: maxAmount || "",
-          startDate: startDate || "",
-          endDate: endDate || "",
-        }
+      const urlFilters = parseUrlFilters(new URLSearchParams(window.location.search))
+      if (urlFilters) {
+        activeFilters = urlFilters
         setFilters(activeFilters)
       }
     }
 
-    let filtered = [...mockInvoices]
-
-    if (activeFilters.status !== "all") {
-      filtered = filtered.filter((inv) => inv.status === activeFilters.status)
-    }
-    if (activeFilters.minAmount) {
-      filtered = filtered.filter((inv) => inv.amount >= Number.parseFloat(activeFilters.minAmount))
-    }
-    if (activeFilters.maxAmount) {
-      filtered = filtered.filter((inv) => inv.amount <= Number.parseFloat(activeFilters.maxAmount))
-    }
-    if (activeFilters.startDate) {
-      filtered = filtered.filter((inv) => inv.dueDate >= activeFilters.startDate)
-    }
-    if (activeFilters.endDate) {
-      filtered = filtered.filter((inv) => inv.dueDate <= activeFilters.endDate)
-    }
-
-    setInvoices(filtered)
+    setInvoices(filterInvoices(mockInvoices, activeFilters))
   }, [mockInvoices])
 
     useEffect(() => {
@@ -158,99 +128,24 @@ export function Table() {
   const applyFilters = () => {
     setShowResults(false)
 
-    let filtered = [...mockInvoices]
-
-    if (filters.status !== "all") {
-      filtered = filtered.filter((inv) => inv.status === filters.status)
-    }
-
-    if (filters.minAmount) {
-      filtered = filtered.filter((inv) => inv.amount >= Number.parseFloat(filters.minAmount))
-    }
-    if (filters.maxAmount) {
-      filtered = filtered.filter((inv) => inv.amount <= Number.parseFloat(filters.maxAmount))
-    }
-
-    if (filters.startDate) {
-      filtered = filtered.filter((inv) => inv.dueDate >= filters.startDate)
-    }
-    if (filters.endDate) {
-      filtered = filtered.filter((inv) => inv.dueDate <= filters.endDate)
-    }
-
-    setInvoices(filtered)
+    setInvoices(filterInvoices(mockInvoices, filters))
     setIsFiltersOpen(false)
     setCurrentPage(1)
-
-    updateUrlParams({
-      status: filters.status !== "all" ? filters.status : null,
-      minAmount: filters.minAmount || null,
-      maxAmount: filters.maxAmount || null,
-      startDate: filters.startDate || null,
-      endDate: filters.endDate || null,
-    })
+    updateUrlParams(buildUrlParams(filters))
 
     setTimeout(() => {
       setShowResults(true)
     }, 400)
   }
 
-  const statusLabels: Record<string, string> = {
-    paid: "Pagado",
-    pending: "Pendiente",
-    overdue: "Vencido",
-  }
-
-  const filterLabels: Record<string, string> = {
-    status: "Estado",
-    minAmount: "Monto min",
-    maxAmount: "Monto max",
-    startDate: "Desde",
-    endDate: "Hasta",
-  }
-
-  const getFilterDisplayValue = (key: string, value: string) => {
-    if (key === "status") return statusLabels[value] || value
-    if (key === "minAmount" || key === "maxAmount") return `Bs. ${value}`
-    return value
-  }
-
-  const activeFilterEntries = Object.entries(filters).filter(
-    ([key, value]) => value !== "" && value !== "all"
-  )
+  const activeFilterEntries = getActiveFilterEntries(filters)
 
   const removeFilter = (key: string) => {
     const newFilters = { ...filters, [key]: key === "status" ? "all" : "" }
     setFilters(newFilters)
-
-    let filtered = [...mockInvoices]
-
-    if (newFilters.status !== "all") {
-      filtered = filtered.filter((inv) => inv.status === newFilters.status)
-    }
-    if (newFilters.minAmount) {
-      filtered = filtered.filter((inv) => inv.amount >= Number.parseFloat(newFilters.minAmount))
-    }
-    if (newFilters.maxAmount) {
-      filtered = filtered.filter((inv) => inv.amount <= Number.parseFloat(newFilters.maxAmount))
-    }
-    if (newFilters.startDate) {
-      filtered = filtered.filter((inv) => inv.dueDate >= newFilters.startDate)
-    }
-    if (newFilters.endDate) {
-      filtered = filtered.filter((inv) => inv.dueDate <= newFilters.endDate)
-    }
-
-    setInvoices(filtered)
+    setInvoices(filterInvoices(mockInvoices, newFilters))
     setCurrentPage(1)
-
-    updateUrlParams({
-      status: newFilters.status !== "all" ? newFilters.status : null,
-      minAmount: newFilters.minAmount || null,
-      maxAmount: newFilters.maxAmount || null,
-      startDate: newFilters.startDate || null,
-      endDate: newFilters.endDate || null,
-    })
+    updateUrlParams(buildUrlParams(newFilters))
   }
 
   const clearFilters = () => {
@@ -266,13 +161,13 @@ export function Table() {
     setInvoices(mockInvoices)
     setCurrentPage(1)
 
-    updateUrlParams({
-      status: null,
-      minAmount: null,
-      maxAmount: null,
-      startDate: null,
-      endDate: null,
-    })
+    updateUrlParams(buildUrlParams({
+      status: "all",
+      minAmount: "",
+      maxAmount: "",
+      startDate: "",
+      endDate: "",
+    }))
 
     setTimeout(() => {
       setShowResults(true)
@@ -323,7 +218,7 @@ export function Table() {
                       variant="secondary"
                       className="flex items-center gap-1 px-3 py-1 text-sm"
                     >
-                      {filterLabels[key]}: {getFilterDisplayValue(key, value)}
+                      {FILTER_LABELS[key]}: {getFilterDisplayValue(key, value)}
                       <button
                         type="button"
                         className="inline-flex cursor-pointer hover:text-destructive"
