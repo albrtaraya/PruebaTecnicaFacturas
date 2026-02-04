@@ -1,6 +1,6 @@
 'use client'
 
-import { createContext, useContext, useState, ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { ProxyPublicRequest } from '@/lib/proxy'
 
 interface SelectedCustomer {
@@ -46,6 +46,64 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
     const [error, setError] = useState<string | null>(null)
     const [selectedCustomers, setSelectedCustomers] = useState<SelectedCustomer[]>([])
 
+    const updateUrlParams = (params: Record<string, string | null>) => {
+        const url = new URL(window.location.href)
+        for (const [key, value] of Object.entries(params)) {
+            if (value === null || value === '') {
+                url.searchParams.delete(key)
+            } else {
+                url.searchParams.set(key, value)
+            }
+        }
+        window.history.replaceState({}, '', url.toString())
+    }
+
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search)
+        const customersParam = params.get('customers')
+        if (!customersParam) return
+
+        const customerIds = customersParam.split(',').filter(Boolean)
+        if (customerIds.length === 0) return
+
+        const restoreCustomers = async () => {
+            try {
+                setLoading(true)
+                const results = await Promise.all(
+                    customerIds.map((id) => ProxyPublicRequest(`/api/invoice?customerId=${id}`))
+                )
+
+                const restoredCustomers: SelectedCustomer[] = []
+                const allInvoices: any[] = []
+
+                results.forEach((res: any, index: number) => {
+                    const dataset = res.data.dataset || []
+                    if (dataset.length > 0) {
+                        restoredCustomers.push({
+                            customerId: customerIds[index],
+                            name: dataset[0].customerName,
+                        })
+                        allInvoices.push(...dataset)
+                    }
+                })
+
+                if (restoredCustomers.length > 0) {
+                    setSelectedCustomers(restoredCustomers)
+                    setMockInvoices(allInvoices)
+                    setInvoices(allInvoices)
+                    setShowResults(true)
+                }
+                setError(null)
+            } catch (err: any) {
+                setError(err.response?.data?.error || 'Error al restaurar clientes')
+            } finally {
+                setLoading(false)
+            }
+        }
+
+        restoreCustomers()
+    }, [])
+
     const fetchInvoicesByCustomers = async (customers: SelectedCustomer[]) => {
         try {
             setLoading(true)
@@ -81,6 +139,7 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
             const newCustomers = [...selectedCustomers, { customerId, name: customerName }]
             setSelectedCustomers(newCustomers)
             await fetchInvoicesByCustomers(newCustomers)
+            updateUrlParams({ customers: newCustomers.map((c) => c.customerId).join(',') })
             setShowResults(true)
         } catch (err: any) {
             setError(err.response?.data?.error || 'Error al buscar cliente')
@@ -96,9 +155,11 @@ export function InvoiceProvider({ children }: { children: ReactNode }) {
         if (newCustomers.length === 0) {
             setMockInvoices([])
             setInvoices([])
+            updateUrlParams({ customers: null })
             return
         }
 
+        updateUrlParams({ customers: newCustomers.map((c) => c.customerId).join(',') })
         fetchInvoicesByCustomers(newCustomers)
     }
 

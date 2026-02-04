@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Filter, LayoutGrid, Table2, FileSpreadsheet, FileText, ChevronLeft, ChevronRight, X } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { InvoiceCard } from "@/components/ui/invoice-card"
@@ -40,6 +40,63 @@ export function Table() {
     endDate: "",
   })
 
+  const filtersRestoredFromUrl = useRef(false)
+
+  const updateUrlParams = (params: Record<string, string | null>) => {
+    const url = new URL(window.location.href)
+    for (const [key, value] of Object.entries(params)) {
+      if (value === null || value === '') {
+        url.searchParams.delete(key)
+      } else {
+        url.searchParams.set(key, value)
+      }
+    }
+    window.history.replaceState({}, '', url.toString())
+  }
+
+  useEffect(() => {
+    if (filtersRestoredFromUrl.current || mockInvoices.length === 0) return
+    filtersRestoredFromUrl.current = true
+
+    const params = new URLSearchParams(window.location.search)
+    const status = params.get('status')
+    const minAmount = params.get('minAmount')
+    const maxAmount = params.get('maxAmount')
+    const startDate = params.get('startDate')
+    const endDate = params.get('endDate')
+
+    if (!status && !minAmount && !maxAmount && !startDate && !endDate) return
+
+    const restoredFilters = {
+      status: status || "all",
+      minAmount: minAmount || "",
+      maxAmount: maxAmount || "",
+      startDate: startDate || "",
+      endDate: endDate || "",
+    }
+    setFilters(restoredFilters)
+
+    let filtered = [...mockInvoices]
+
+    if (restoredFilters.status !== "all") {
+      filtered = filtered.filter((inv) => inv.status === restoredFilters.status)
+    }
+    if (restoredFilters.minAmount) {
+      filtered = filtered.filter((inv) => inv.amount >= Number.parseFloat(restoredFilters.minAmount))
+    }
+    if (restoredFilters.maxAmount) {
+      filtered = filtered.filter((inv) => inv.amount <= Number.parseFloat(restoredFilters.maxAmount))
+    }
+    if (restoredFilters.startDate) {
+      filtered = filtered.filter((inv) => inv.dueDate >= restoredFilters.startDate)
+    }
+    if (restoredFilters.endDate) {
+      filtered = filtered.filter((inv) => inv.dueDate <= restoredFilters.endDate)
+    }
+
+    setInvoices(filtered)
+    setCurrentPage(1)
+  }, [mockInvoices])
 
     useEffect(() => {
       if(localStorage.getItem("isFirst") == "true"){
@@ -114,6 +171,14 @@ export function Table() {
     setIsFiltersOpen(false)
     setCurrentPage(1)
 
+    updateUrlParams({
+      status: filters.status !== "all" ? filters.status : null,
+      minAmount: filters.minAmount || null,
+      maxAmount: filters.maxAmount || null,
+      startDate: filters.startDate || null,
+      endDate: filters.endDate || null,
+    })
+
     setTimeout(() => {
       setShowResults(true)
     }, 400)
@@ -131,6 +196,14 @@ export function Table() {
     })
     setInvoices(mockInvoices)
     setCurrentPage(1)
+
+    updateUrlParams({
+      status: null,
+      minAmount: null,
+      maxAmount: null,
+      startDate: null,
+      endDate: null,
+    })
 
     setTimeout(() => {
       setShowResults(true)
