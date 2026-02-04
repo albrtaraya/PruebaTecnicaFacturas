@@ -33,7 +33,7 @@ export default function Home() {
             <h1 className="text-5xl font-bold text-gray-800 dark:text-gray-100 max-md:text-3xl">
               Bienvenid@ a la app
             </h1>
-            <p className="text-md text-gray-500 dark:text-gray-300">
+            <p className="text-md text-gray-500 dark:text-gray-400 mt-2">
               Esta es la prueba técnica, ingresa el identificador del cliente para
               ver sus facturas (ejemplo: 123, 456, 789, 1011, 1213, 1415, 1617 o 1819).<br/>
               Luego haga clic sobre una card o el boton de billetera para pagar la factura. <br/>
